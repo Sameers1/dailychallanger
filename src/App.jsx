@@ -6,6 +6,37 @@ import LocalFireDepartmentIcon from '@mui/icons-material/LocalFireDepartment';
 import EmojiEventsIcon from '@mui/icons-material/EmojiEvents';
 import HistoryIcon from '@mui/icons-material/History';
 import StarIcon from '@mui/icons-material/Star';
+import { Menu, MenuItem } from '@mui/material';
+import ArrowDropDownIcon from '@mui/icons-material/ArrowDropDown';
+
+const ProgressBar = ({ points, achievements }) => {
+  const nextAchievement = achievements.find(a => a.requiredPoints > points);
+  const progress = nextAchievement ? (points / nextAchievement.requiredPoints) * 100 : 100;
+
+  return (
+    <Box sx={{ width: '100%', mb: 4 }}>
+      <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
+        <Typography variant="body2">Points: {points}</Typography>
+        {nextAchievement && (
+          <Typography variant="body2">
+            Next: {nextAchievement.name} ({nextAchievement.requiredPoints} pts)
+          </Typography>
+        )}
+      </Box>
+      <Box sx={{ height: 10, borderRadius: 5, background: 'linear-gradient(90deg, #3f51b5 0%, #f50057 100%)' }}>
+        <Box 
+          sx={{ 
+            height: '100%', 
+            width: `${progress}%`, 
+            borderRadius: 5, 
+            background: 'linear-gradient(90deg, #4caf50 0%, #ff9800 100%)',
+            transition: 'width 0.5s ease'
+          }} 
+        />
+      </Box>
+    </Box>
+  );
+};
 
 const challenges = [
   { id: 1, text: 'Write with your non-dominant hand today', type: 'creative', difficulty: 'medium' },
@@ -36,7 +67,7 @@ const motivationalQuotes = [
   "You are stronger than you think."
 ];
 
-function App() {
+function App({ currentTheme, onThemeChange }) {
   const [currentChallenge, setCurrentChallenge] = useState(null);
   const [completed, setCompleted] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState('all');
@@ -170,12 +201,47 @@ function App() {
     setSelectedCategory(category);
   };
 
+  const handleThemeChange = (theme) => {
+    onThemeChange(theme);
+    localStorage.setItem('selectedTheme', theme);
+  };
+
+  const [anchorEl, setAnchorEl] = useState(null);
+  const open = Boolean(anchorEl);
+
+  const handleThemeMenuClick = (event) => {
+    setAnchorEl(event.currentTarget);
+  };
+
+  const handleThemeMenuClose = () => {
+    setAnchorEl(null);
+  };
+
   return (
-    <Container maxWidth="sm" sx={{ py: 6 }}>
+    <Container maxWidth="md" sx={{ mt: 4, mb: 4 }}>
+      <ProgressBar points={points} achievements={achievements} />
       <Box sx={{ textAlign: 'center', mb: 6 }}>
         <Typography variant="h4" component="h1" gutterBottom>
           Daily Challenge Generator
         </Typography>
+        <Button
+          variant="outlined"
+          onClick={handleThemeMenuClick}
+          endIcon={<ArrowDropDownIcon />}
+          sx={{ mb: 3, textTransform: 'none' }}
+        >
+          Theme: {currentTheme.charAt(0).toUpperCase() + currentTheme.slice(1)}
+        </Button>
+        <Menu
+          anchorEl={anchorEl}
+          open={open}
+          onClose={handleThemeMenuClose}
+          MenuListProps={{ 'aria-labelledby': 'theme-button' }}
+        >
+          <MenuItem onClick={() => { handleThemeChange('default'); handleThemeMenuClose(); }}>Default</MenuItem>
+          <MenuItem onClick={() => { handleThemeChange('dark'); handleThemeMenuClose(); }}>Dark</MenuItem>
+          <MenuItem onClick={() => { handleThemeChange('nature'); handleThemeMenuClose(); }}>Nature</MenuItem>
+        </Menu>
         <Typography variant="body1" color="text.secondary" sx={{ mb: 3 }}>
           {quote}
         </Typography>
@@ -236,32 +302,52 @@ function App() {
           </Card>
         )}
 
-        <Stack direction="row" spacing={2} justifyContent="center">
-          <Button
-            variant="contained"
-            color="primary"
-            onClick={handleNewChallenge}
-            startIcon={<RefreshIcon />}
-          >
-            New Challenge
-          </Button>
-          <Button
-            variant="contained"
-            color="success"
-            onClick={handleComplete}
-            disabled={completed}
-            startIcon={<CheckCircleIcon />}
-          >
-            Complete
-          </Button>
-          <Button
-            variant="outlined"
-            onClick={() => setShowHistory(true)}
-            startIcon={<HistoryIcon />}
-          >
-            History
-          </Button>
+        <Stack direction="row" spacing={2} justifyContent="center" sx={{ mb: 4 }}>
+          <Chip
+            label="Default Theme"
+            onClick={() => handleThemeChange('default')}
+            color={currentTheme === 'default' ? 'primary' : 'default'}
+            variant={currentTheme === 'default' ? 'filled' : 'outlined'}
+          />
+          <Chip
+            label="Dark Theme"
+            onClick={() => handleThemeChange('dark')}
+            color={currentTheme === 'dark' ? 'primary' : 'default'}
+            variant={currentTheme === 'dark' ? 'filled' : 'outlined'}
+          />
+          <Chip
+            label="Nature Theme"
+            onClick={() => handleThemeChange('nature')}
+            color={currentTheme === 'nature' ? 'primary' : 'default'}
+            variant={currentTheme === 'nature' ? 'filled' : 'outlined'}
+          />
         </Stack>
+          <Stack direction="row" spacing={2} justifyContent="center">
+            <Button
+              variant="contained"
+              color="primary"
+              onClick={handleNewChallenge}
+              startIcon={<RefreshIcon />}
+            >
+              New Challenge
+            </Button>
+            <Button
+              variant="contained"
+              color="success"
+              onClick={handleComplete}
+              disabled={completed}
+              startIcon={<CheckCircleIcon />}
+            >
+              Complete
+            </Button>
+            <Button
+              variant="outlined"
+              onClick={() => setShowHistory(true)}
+              startIcon={<HistoryIcon />}
+            >
+              History
+            </Button>
+          </Stack>
       </Box>
 
       <Dialog open={showHistory} onClose={() => setShowHistory(false)}>
